@@ -12,11 +12,15 @@ def parse_args() -> argparse.Namespace:
         description="Recursively build a file inventory CSV for archive classification."
     )
     parser.add_argument("target", help="Target directory to scan")
-    parser.add_argument("--output", required=True, help="Output CSV path")
+    parser.add_argument(
+        "--output",
+        required=True,
+        help="Output CSV path"
+    )
     parser.add_argument(
         "--include-hidden",
         action="store_true",
-        help="Include hidden files and folders",
+        help="Include hidden files and folders"
     )
     return parser.parse_args()
 
@@ -54,9 +58,9 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     rows = list(scan_files(target, include_hidden=args.include_hidden))
-    with output.open("w", newline="", encoding="utf-8-sig") as file_obj:
+    with output.open("w", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(
-            file_obj,
+            f,
             fieldnames=[
                 "relative_path",
                 "file_name",

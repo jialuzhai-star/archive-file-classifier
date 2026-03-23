@@ -1,22 +1,23 @@
 ---
 name: archive-file-classifier
-description: This skill should be used when the user wants to classify, archive, or reorganize local files into a clear folder taxonomy, especially for document-heavy folders containing PDF, XLSX, XMind, DOCX, or mixed office files that require a read-first, confirm-before-move workflow.
+description: 文件归档分类器。内置了【20260320】分类规则完整版，提供“先盘点、后判断、再确认执行”的高级分类流程，适用于混合办公文档的高优防错归档。
 ---
 
 # Archive File Classifier
 
 ## Overview
 
-提供一套“先盘点、后判断、再确认执行”的文件归档流程，适用于本地资料库整理、历史项目文档归档、混合办公文件批量分类等场景。
+提供一套“先盘点、后判断、再确认执行”的文件归档分类流程，适用于本地资料库整理、历史项目文档归档、混合办公文件批量分类等场景。
 
-把风险控制放在前面：先只读分析、产出分类建议、等待确认，再执行备份与移动；默认不直接删除文件，只输出待删清单供用户自行处理。
+优先把风险控制放在前面：先只读分析、输出分类建议、等待确认，再执行备份与移动；默认不直接删除文件，只产出待删清单供用户自行处理。
 
 ## When To Use
 
-在以下场景触发本技能：
+在以下场景触发本 skill：
 
 - 用户要求“整理文件夹”“归档资料”“按类别重分文件”
 - 目标目录中包含大量 PDF、XLSX、XMind、DOCX、图片或混合文件
+- 用户已经给出分类标准，或希望先共同沉淀分类标准
 - 需要先识别边界文件、疑难文件、待确认文件，再批量移动
 - 需要在高风险操作前自动执行备份、核对与复查
 
@@ -28,17 +29,20 @@ description: This skill should be used when the user wants to classify, archive,
 
 ## Core Workflow
 
-### Step 1: 锁定范围与分类口径
+### Step 1: 锁定范围与分类标准
 
 先确认以下信息；缺失时优先补齐，不要急着移动文件：
 
-1. 目标目录
-2. 现有分类目录结构是否已存在
-3. 分类规则是按“文档类型 / 业务主题 / 项目阶段 / 用途”中的哪一种
-4. 是否允许新增子分类
-5. 是否需要保留“待确认”区
+1. 目标目录是哪个
+2. **选择或创建分类标准**：
+   - **静默盘点**：先读取技能 `references/` 目录下现存的所有分类标准文件。
+   - **新建标准**：如果泡芙大人明确要求“新建一套标准”，则暂停分类，进入【标准共建模式】，从0到1跟用户对话梳理出一套新规则，并保存为 `references/[新规则名称].md`。
+   - **多选一询问**：如果 `references/` 目录下已有**多套**标准，必须先询问用户“本次归档使用哪套标准？”。
+   - **默认规则**：如果用户未明确说明，且只有一套标准，则默认套用自带的 `references/20260320_分类规则完整版.md`。
+3. 是否允许在选定标准下新增子分类（遇新情况需请示）
+4. 是否需要保留“待确认”区
 
-若用户只给了模糊目标，先输出一版建议分类框架，再等待确认。
+若用户只给了模糊目标，请先根据选定的标准输出一版建议分类框架，再让用户确认。
 
 ### Step 2: 只读盘点，不做改动
 
@@ -51,7 +55,7 @@ description: This skill should be used when the user wants to classify, archive,
 - 按扩展名、父目录、命名模式做首轮聚类
 - 标出空目录、隐藏文件、明显无关文件
 
-若目录很大，先分批扫描，不要一次性读取过多文件。
+若目录很大，先分批扫描，不要一次性读太多文件。
 
 ### Step 3: 抽样读内容，建立分类建议
 
@@ -62,7 +66,7 @@ description: This skill should be used when the user wants to classify, archive,
 1. 先看文件名、父目录、时间、版本号
 2. 再看文档首页标题、副标题、作者、日期
 3. 再看目录、章节名、表头、结论页
-4. 仍不确定时，放入“待确认 / 边界文件”清单
+4. 仍不确定时，放入“待确认/边界文件”清单
 
 常用处理方式：
 
@@ -71,10 +75,7 @@ description: This skill should be used when the user wants to classify, archive,
 - XLSX：读取 sheet 名、首行字段、样例数据
 - DOCX/PPTX：读标题页、目录页、备注区
 
-详细只读判定方式参考 `references/file-reading-reference.md`。
-正文无法稳定读取时，转用 `references/unreadable-content-playbook.md`。
-
-### Step 4: 先交付建议，不直接执行移动
+### Step 4: 先交付建议，不直接开搬
 
 在真正移动前，必须先输出一个“建议结果”，至少包含：
 
@@ -97,7 +98,7 @@ description: This skill should be used when the user wants to classify, archive,
 2. 完整备份目标目录
 3. 说明备份位置
 
-若在 Windows 上操作，避免先写带非 ASCII 路径的 `.ps1` / `.bat` 再执行；优先直接执行命令或使用 Python 逐项移动，避免编码导致路径异常。
+若在 Windows 上操作，避免先写带中文路径的 `.ps1` / `.bat` 再执行；优先直接执行命令或使用 Python 逐项移动，避免编码翻车。
 
 ### Step 6: 分批移动与逐批核对
 
@@ -121,7 +122,7 @@ description: This skill should be used when the user wants to classify, archive,
 1. 检查原目录是否还残留业务文件
 2. 检查目标目录中是否仍有疑似错分项
 
-复查结果明确分成三类：
+复查结果要明确分成三类：
 
 - 已完成，无异常
 - 有残留文件待补处理
@@ -131,7 +132,7 @@ description: This skill should be used when the user wants to classify, archive,
 
 默认不执行删除。
 
-若用户询问是否可以删掉空目录或备份目录，先给出：
+若用户问“是否可以删掉空目录或备份目录”，先给出：
 
 - 可删除对象清单
 - 删除前置条件
@@ -170,9 +171,13 @@ description: This skill should be used when the user wants to classify, archive,
 1. 结论：这一轮建议或执行结果
 2. 已确认项：可直接处理内容
 3. 待确认项：需要用户拍板的文件或规则
-4. 风险 / 下一步：是否备份、是否执行、是否复查
+4. 风险/下一步：是否备份、是否执行、是否复查
 
 ## Bundled Resources
+
+### `references/20260320_分类规则完整版.md`
+
+泡芙大人独家制定的 0-6 分类法，通过分析文件的核心目的与服务场景进行精准归档，任何无法匹配该大纲的疑似边界文件均需挂起确认。
 
 ### `scripts/build_inventory.py`
 
@@ -191,14 +196,6 @@ python3 scripts/build_inventory.py "/path/to/folder" --output "/tmp/archive_inve
 ### `references/classification-report-template.md`
 
 用于输出“首轮分类建议”“补漏分析”“总复查结果”这类结构化报告。
-
-### `references/unreadable-content-playbook.md`
-
-用于处理正文无法稳定读取的文件，避免在低把握场景下误判并误移动。
-
-### `references/file-reading-reference.md`
-
-用于快速查看常见文件类型的只读判定方式。
 
 ## Quick Start
 
